@@ -1,7 +1,9 @@
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/sharesphere";
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/sharesphere";
 
 async function runSeed() {
   console.log("Connecting to MongoDB at:", MONGODB_URI);
@@ -36,7 +38,7 @@ async function runSeed() {
     { upsert: true }
   );
 
-  // 2. Donor (Connaught Place, New Delhi)
+  // 2. Donor
   const donorRes = await usersColl.findOneAndUpdate(
     { email: "donor@sharesphere.org" },
     {
@@ -55,9 +57,14 @@ async function runSeed() {
     },
     { upsert: true, returnDocument: "after" }
   );
+
   const donorUser = donorRes;
 
-  // 3. NGO A: Hope Foundation (Lajpat Nagar, South Delhi: ~7.2 km away)
+  if (!donorUser) {
+    throw new Error("Donor was not created/found");
+  }
+
+  // 3. NGO A: Hope Foundation
   const ngoARes = await usersColl.findOneAndUpdate(
     { email: "hope@ngo.org" },
     {
@@ -76,9 +83,14 @@ async function runSeed() {
     },
     { upsert: true, returnDocument: "after" }
   );
+
   const ngoA = ngoARes;
 
-  // 4. NGO B: Care India Relief (Rohini, North West Delhi: ~13.3 km away)
+  if (!ngoA) {
+    throw new Error("NGO A was not created/found");
+  }
+
+  // 4. NGO B: Care India Relief
   const ngoBRes = await usersColl.findOneAndUpdate(
     { email: "care@ngo.org" },
     {
@@ -97,9 +109,14 @@ async function runSeed() {
     },
     { upsert: true, returnDocument: "after" }
   );
+
   const ngoB = ngoBRes;
 
-  // 5. NGO C: Seva Social Trust (Noida Sector 18: ~12.7 km away)
+  if (!ngoB) {
+    throw new Error("NGO B was not created/found");
+  }
+
+  // 5. NGO C: Seva Social Trust
   const ngoCRes = await usersColl.findOneAndUpdate(
     { email: "seva@ngo.org" },
     {
@@ -118,11 +135,24 @@ async function runSeed() {
     },
     { upsert: true, returnDocument: "after" }
   );
+
   const ngoC = ngoCRes;
+
+  if (!ngoC) {
+    throw new Error("NGO C was not created/found");
+  }
 
   // Reset demo requirements
   await reqColl.deleteMany({
-    requirementId: { $in: ["REQ-401102", "REQ-302204", "REQ-503306", "REQ-109921", "REQ-208843"] },
+    requirementId: {
+      $in: [
+        "REQ-401102",
+        "REQ-302204",
+        "REQ-503306",
+        "REQ-109921",
+        "REQ-208843",
+      ],
+    },
   });
 
   // Insert Tech Mela requirements
@@ -135,7 +165,8 @@ async function runSeed() {
       category: "Clothes & Blankets",
       quantityNeeded: 40,
       quantityReceived: 0,
-      description: "Severe cold wave relief for homeless night shelters in South Delhi.",
+      description:
+        "Severe cold wave relief for homeless night shelters in South Delhi.",
       location: ngoA.location,
       latitude: ngoA.latitude,
       longitude: ngoA.longitude,
@@ -152,7 +183,8 @@ async function runSeed() {
       category: "Clothes & Blankets",
       quantityNeeded: 30,
       quantityReceived: 0,
-      description: "Warm bedding needed for destitute elderly residents in Rohini care home.",
+      description:
+        "Warm bedding needed for destitute elderly residents in Rohini care home.",
       location: ngoB.location,
       latitude: ngoB.latitude,
       longitude: ngoB.longitude,
@@ -169,7 +201,8 @@ async function runSeed() {
       category: "Clothes & Blankets",
       quantityNeeded: 50,
       quantityReceived: 0,
-      description: "Winter preparedness drive for migrant worker settlement clusters.",
+      description:
+        "Winter preparedness drive for migrant worker settlement clusters.",
       location: ngoC.location,
       latitude: ngoC.latitude,
       longitude: ngoC.longitude,
@@ -186,7 +219,8 @@ async function runSeed() {
       category: "Food & Ration",
       quantityNeeded: 80,
       quantityReceived: 0,
-      description: "Monthly rice, wheat, and pulses for underprivileged family households.",
+      description:
+        "Monthly rice, wheat, and pulses for underprivileged family households.",
       location: ngoA.location,
       latitude: ngoA.latitude,
       longitude: ngoA.longitude,
@@ -203,7 +237,8 @@ async function runSeed() {
       category: "Education & Books",
       quantityNeeded: 120,
       quantityReceived: 0,
-      description: "Notebooks and learning kits for children in community evening classes.",
+      description:
+        "Notebooks and learning kits for children in community evening classes.",
       location: ngoB.location,
       latitude: ngoB.latitude,
       longitude: ngoB.longitude,
@@ -215,10 +250,18 @@ async function runSeed() {
   ]);
 
   console.log("✓ Tech Mela Demo Data successfully seeded into MongoDB!");
-  console.log("  - Demo Donor: donor@sharesphere.org / password123 (Connaught Place)");
-  console.log("  - NGO A: hope@ngo.org / password123 (Hope Shelter Foundation, 40 Blankets CRITICAL)");
-  console.log("  - NGO B: care@ngo.org / password123 (Care India Relief, 30 Blankets HIGH)");
-  console.log("  - NGO C: seva@ngo.org / password123 (Seva Community Trust, 50 Blankets MEDIUM)");
+  console.log(
+    "  - Demo Donor: donor@sharesphere.org / password123 (Connaught Place)"
+  );
+  console.log(
+    "  - NGO A: hope@ngo.org / password123 (Hope Shelter Foundation, 40 Blankets CRITICAL)"
+  );
+  console.log(
+    "  - NGO B: care@ngo.org / password123 (Care India Relief, 30 Blankets HIGH)"
+  );
+  console.log(
+    "  - NGO C: seva@ngo.org / password123 (Seva Community Trust, 50 Blankets MEDIUM)"
+  );
   console.log("  - Admin: admin@sharesphere.org / password123");
 
   await mongoose.disconnect();
@@ -229,4 +272,3 @@ runSeed().catch((err) => {
   console.error("Seed error:", err);
   process.exit(1);
 });
-
